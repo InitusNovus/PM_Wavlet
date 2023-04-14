@@ -33,9 +33,9 @@ fs = length(t)/(t(length(t)) - t(1));
 
 % Resize Data
 
-original_num_columns = len(cfs_Id);
+original_num_columns = length(cfs_Id);
 
-num_columns_resampled = len(cfs_Id)/50; % New number of columns
+num_columns_resampled = original_num_columns/50; % New number of columns
 resample_factor = size(cfs_Id, 2) / num_columns_resampled;
 t_res = resample(t.', 1, resample_factor).';
 
