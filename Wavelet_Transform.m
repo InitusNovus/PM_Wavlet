@@ -4,6 +4,9 @@ clearvars;
 File_PATH = 'Data/Ron_50_Roff_50';
 Result_Path='Data/Wavelet_Result/';
 Select_variable='Test';
+% Please write Resist
+R_on=;
+R_off=;
 
 File_List=dir(File_PATH);
 [Data_num,~] = size(File_List);
@@ -11,7 +14,7 @@ File_List=dir(File_PATH);
 VPO=5;
 %% File Selection Section
 totalTimer = tic;
-for i = 3: Data_num+1
+for i = 3: Data_num
     iterTimer = tic;
 
     file_name=File_List(i).name;
@@ -69,16 +72,16 @@ for i = 3: Data_num+1
     Vgs_on = 0.1*str2double(name_parts{6});
     Vgs_off = 0.1*str2double(name_parts{8});
 
-    Save_name= [Result_Path,'Ron_',num2str(50),'_Roff_',num2str(50),'_Pulse_',num2str(name_parts{2}),...
+    Save_name= [Result_Path,'Ron_',num2str(R_on),'_Roff_',num2str(R_off),'_Pulse_',num2str(name_parts{2}),...
         '_Vds_',num2str(name_parts{4}),'_Vgson_',num2str(Vgs_on),'_Vgsoff_',num2str(Vgs_off),...
         '_Resamplefac_',num2str(resample_factor),'_id_',num2str(i-2),'.csv'];
     
     writematrix(Result,Save_name)
     proctime = toc(iterTimer);
-    fprintf('Iteration %d / %d is done. Process time: %.3f \n', i-2, Data_num-2, proctime);
+    totalTime = toc(totalTimer);
+    formatted_time = datestr(elapsed_time / (24 * 60 * 60), 'HH:MM:SS');
+    fprintf('Iteration %d / %d is done. Process time: %.3f Elapse Time: %s\n', i-2, Data_num-2, proctime,formatted_time);
 end
-totalTime = toc(totalTimer);
-disp(totalTime);
 
 % % Concat The data and reshpe [3 * 174 * length]
 % 
