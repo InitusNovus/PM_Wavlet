@@ -1,24 +1,25 @@
 %% Import CSV File
 clearvars;
 % Write HyperParameter
-File_PATH = 'Data/Test';
-Result_Path='Data/Result';
+File_PATH = 'Data/Ron_50_Roff_50';
+Result_Path='Data/Wavelet_Result/';
 Select_variable='Test';
 
 File_List=dir(File_PATH);
 [Data_num,~] = size(File_List);
 
 VPO=5;
-labels=zeros(Data_num-2,6)
-% File Selection Section
+labels=zeros(Data_num-2,6);
+%% File Selection Section
 for i = 3: Data_num+1
+    i=3;
     file_name=File_List(i).name;
-    name_parts=split(file_name,'_')
+    name_parts=split(file_name,'_');
     file_name=strcat(File_PATH,'/',file_name);
     data = readtable(file_name);
     % Data parsing
     
-    data = renamevars(data, "TIME", "Time");
+    data = renamevars(data, "Labels", "Time");
     t = data.Time;
     Vgs = data.Vgs;
     Vds = data.Vds;
@@ -31,6 +32,7 @@ for i = 3: Data_num+1
     [cfs_Vds, f_Vds] = cwt(Vds, 'Morse', fs ,VoicePerOctave=VPO);
     [cfs_Vgs, f_Vgs] = cwt(Vgs, 'Morse', fs ,VoicePerOctave=VPO);
     
+
     % Resize Data
     
     original_num_columns = length(cfs_Id);
@@ -51,9 +53,28 @@ for i = 3: Data_num+1
     % On Resistancs, Off resistances, Pulse time , Vds, Vgs_on , Vgs_of,
     % Reduce ratio
 
-    labels(i-1,:)=[5,5,str2double(name_parts{2}),str2double(name_parts{4}),...
-        0.1*str2double(name_parts{6}),0.1*str2double(name_parts{8}),resample_factor];
+    % abs
+    abs_cfs_Id_res= abs(cfs_Id_res);
+    abs_cfs_Vds_res= abs(cfs_Vds_res);
+    abs_cfs_Vgs_res= abs(cfs_Vgs_res);
 
+    % angle 
+    angle_cfs_Id_res= angle(cfs_Id_res);
+    angle_cfs_Vds_res= angle(cfs_Vds_res);
+    angle_cfs_Vgs_res= angle(cfs_Vgs_res);
+
+    Result=[abs_cfs_Id_res;abs_cfs_Vds_res;abs_cfs_Vgs_res;angle_cfs_Id_res;angle_cfs_Vds_res;angle_cfs_Vgs_res];
+
+    Vgs_on = 0.1*str2double(name_parts{6});
+    Vgs_off = 0.1*str2double(name_parts{8});
+
+    Save_name= [Result_Path,'Ron_',num2str(50),'_Roff_',num2str(50),'_Pulse_',num2str(name_parts{2}),...
+        '_Vds_',num2str(name_parts{4}),'_Vgson_',num2str(Vgs_on),'_Vgsoff_',num2str(Vgs_off),...
+        '_Resamplefac_',num2str(resample_factor),'_id_',num2str(i-2),'.csv'];
+    
+    writematrix(Result,Save_name)
+
+    fprintf('Iteration: %d / %d\n', i-2, Data_num-2);
 end
 
 
