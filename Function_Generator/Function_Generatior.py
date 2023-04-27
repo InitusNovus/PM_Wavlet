@@ -1,12 +1,15 @@
 import matplotlib.pyplot as plt
 import csv
+
 ## Parameter_setting
+
+## all Parameter is calculated base on 10MS/s
 
 ## Base Unit micro
 Input_time = 10 # fixed
-Charging_time = [30,40,45] # Maximu Value = 60*10^(-6)
+Charging_time = list(range(10,65,5)) # Maximu Value = 60*10^(-6)
 Waiting_time = 50 # Fixed
-Second_pulse_Time = [10,15,20] # Maximu Value = 20*10^(-6)
+Second_pulse_Time = [20] # Maximu Value = 20*10^(-6)
 End_TIme = 50 # Fixed
 
 # Base Unit Mega
@@ -26,7 +29,7 @@ for ch in Charging_time:
         Result= Input + Charging + Waiting + Second_pulse + End
 
 
-        with open('Function_Generator/Charging_{0}_Double_pulse_Test_Time_{1}.csv'.format(ch,Sp), 'w', newline='') as f:
+        with open('Charging_{0}_Double_pulse_Test_Time_{1}.csv'.format(ch,Sp), 'w', newline='') as f:
             writer = csv.writer(f)
             writer.writerow(Result)
 
