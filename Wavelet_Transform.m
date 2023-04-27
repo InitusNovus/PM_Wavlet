@@ -9,10 +9,11 @@ File_List=dir(File_PATH);
 [Data_num,~] = size(File_List);
 
 VPO=5;
-labels=zeros(Data_num-2,6);
 %% File Selection Section
+totalTimer = tic;
 for i = 3: Data_num+1
-    i=3;
+    iterTimer = tic;
+
     file_name=File_List(i).name;
     name_parts=split(file_name,'_');
     file_name=strcat(File_PATH,'/',file_name);
@@ -73,10 +74,11 @@ for i = 3: Data_num+1
         '_Resamplefac_',num2str(resample_factor),'_id_',num2str(i-2),'.csv'];
     
     writematrix(Result,Save_name)
-
-    fprintf('Iteration: %d / %d\n', i-2, Data_num-2);
+    proctime = toc(iterTimer);
+    fprintf('Iteration %d / %d is done. Process time: %.3f \n', i-2, Data_num-2, proctime);
 end
-
+totalTime = toc(totalTimer);
+disp(totalTime);
 
 % % Concat The data and reshpe [3 * 174 * length]
 % 
