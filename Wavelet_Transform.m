@@ -5,11 +5,11 @@
 clearvars;
 % Write HyperParameter
 File_PATH = 'Data/Ron_50_Roff_50';
-Result_Path='Data/Wavelet_Result/';
+Result_Path='Data/Wavelet_Result_test_toSingle/';
 Select_variable='Test';
 % Please write Resist
-R_on=;
-R_off=;
+R_on=50;
+R_off=50;
 
 File_List=dir(File_PATH);
 [Data_num,~] = size(File_List);
@@ -35,9 +35,9 @@ for i = 3: Data_num
     % Perform Contimuous Wavelet Transform
     
     fs = length(t)/(t(length(t)) - t(1));
-    [cfs_Id, f_Id] = cwt(Id, 'Morse', fs ,VoicePerOctave=VPO);
-    [cfs_Vds, f_Vds] = cwt(Vds, 'Morse', fs ,VoicePerOctave=VPO);
-    [cfs_Vgs, f_Vgs] = cwt(Vgs, 'Morse', fs ,VoicePerOctave=VPO);
+    [cfs_Id, f_Id] = cwt(single(Id), 'Morse', fs ,VoicePerOctave=VPO);
+    [cfs_Vds, f_Vds] = cwt(single(Vds), 'Morse', fs ,VoicePerOctave=VPO);
+    [cfs_Vgs, f_Vgs] = cwt(single(Vgs), 'Morse', fs ,VoicePerOctave=VPO);
     
 
     % Resize Data
@@ -82,7 +82,7 @@ for i = 3: Data_num
     writematrix(Result,Save_name)
     proctime = toc(iterTimer);
     totalTime = toc(totalTimer);
-    formatted_time = datestr(elapsed_time / (24 * 60 * 60), 'HH:MM:SS');
+    formatted_time = datestr(totalTime / (24 * 60 * 60), 'HH:MM:SS');
     fprintf('Iteration %d / %d is done. Process time: %.3f Elapse Time: %s\n', i-2, Data_num-2, proctime,formatted_time);
 end
 
