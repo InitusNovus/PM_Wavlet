@@ -1,3 +1,6 @@
+%% TODO:
+%   Make double -> single to reduce the size of result data
+%   The precision is not important.
 %% Import CSV File
 clearvars;
 % Write HyperParameter
