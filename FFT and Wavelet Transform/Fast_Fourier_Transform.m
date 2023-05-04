@@ -4,8 +4,8 @@
 %% Import CSV File
 clearvars;
 % Write HyperParameter
-File_PATH = 'Data/Ron_50_Roff_50';
-Result_Path='Data/FFT_toSingle/';
+File_PATH = '../Data/Ron_50_Roff_50';
+Result_Path='../Data/FFT_Data';
 Select_variable='Test';
 % Please write Resist
 R_on=50;
@@ -17,7 +17,7 @@ File_List=dir(File_PATH);
 totalTimer = tic;
 for k = 3: Data_num
     iterTimer = tic;
-
+    k=4;
     file_name=File_List(k).name;
     name_parts=split(file_name,'_');
     file_name=strcat(File_PATH,'/',file_name);
