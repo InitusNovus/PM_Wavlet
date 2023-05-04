@@ -13,14 +13,12 @@ R_off=50;
 
 File_List=dir(File_PATH);
 [Data_num,~] = size(File_List);
-
-VPO=5;
 %% File Selection Section
 totalTimer = tic;
-for i = 3: Data_num
+for k = 3: Data_num
     iterTimer = tic;
 
-    file_name=File_List(i).name;
+    file_name=File_List(k).name;
     name_parts=split(file_name,'_');
     file_name=strcat(File_PATH,'/',file_name);
     data = readtable(file_name);
@@ -39,13 +37,13 @@ for i = 3: Data_num
     min_gap = 10000; % Arbitrary value
 
     zero_crossings = Find_zeroCrossing(Vds_zeromean, min_gap);
-    assert(length(zero_crossings) == 4, "Error: Switching transient detection failed")
+    assert(length(zero_crossings) == 4, "Error: Switching transient detection failed");
 
     % Interpolate the time values corresponding to the zero crossings
     zero_crossing_times = interp1(1:length(t), t, zero_crossings);
     clear zero_crossings
 
-    zero_crossing_names = {"Charging"; "Turn-Off"; "Turn-On"; "End"}
+    zero_crossing_names = {"Charging"; "Turn-Off"; "Turn-On"; "End"};
     st_time = containers.Map();
     for i = 1:4
     st_time(zero_crossing_names{i}) = zero_crossing_times(i);
@@ -103,73 +101,87 @@ for i = 3: Data_num
     clear t_turnoff Vgs_turnoff Vds_turnoff Id_turnoff t_turnon Vgs_turnon Vds_turnon Id_turnon
     clear t Vgs Vds Id
     clear data_turnoff data_turnon
+   
+    % Zeromean FFT
+    data_turnoff_arr_with_t = table2array(data_trs.turnoff);
+    data_turnoff_arr = data_turnoff_arr_with_t(:, 2:end);
+    clear data_turnoff_arr_with_t
+    data_turnoff_mean = mean(data_turnoff_arr);
+    data_turnoff_zm = data_turnoff_arr - data_turnoff_mean;
 
-    % Perform FFT
-    t = data_raw.t;
-    Vgs_turnoff = data_trs.turnoff.Vgs;
-    Vds_turnoff = data_trs.turnoff.Vds;
-    Id_turnoff = data_trs.turnoff.Id;
-    Vgs_turnon = data_trs.turnon.Vgs;
-    Vds_turnon = data_trs.turnon.Vds;
-    Id_turnon = data_trs.turnon.Id;
-
-    fs = length(t)/(t(length(t)) - t(1));
+    data_trs_turnoff_zm = data_trs.turnoff;
+    data_trs_turnoff_zm{:, 2:4} = data_turnoff_zm;
     
-    % For Turn off Transient
+    data_trs_zm = table();
+    data_trs_zm.turnoff = data_trs_turnoff_zm;
+    
+    data_turnon_arr_with_t = table2array(data_trs.turnon);
+    data_turnon_arr = data_turnon_arr_with_t(:, 2:end);
+    clear data_turnon_arr_with_t
+    data_turnon_mean = mean(data_turnon_arr);
+    data_turnon_zm = data_turnon_arr - data_turnon_mean;
+    
+    data_trs_turnon_zm = data_trs.turnon;
+    data_trs_turnon_zm{:, 2:4} = data_turnon_zm;
+    
+    data_trs_zm.turnon = data_trs_turnon_zm;
+
+    clear data_turnoff_arr data_turnoff_mean data_turnoff_zm data_trs_turnoff_zm
+    clear data_turnon_arr data_turnon_mean data_turnon_zm data_trs_turnon_zm
+    % Parse Internal Variables
+    t = data_raw.t;
+    Vgs_turnoff = data_trs_zm.turnoff.Vgs;
+    Vds_turnoff = data_trs_zm.turnoff.Vds;
+    Id_turnoff = data_trs_zm.turnoff.Id;
+    Vgs_turnon = data_trs_zm.turnon.Vgs;
+    Vds_turnon = data_trs_zm.turnon.Vds;
+    Id_turnon = data_trs_zm.turnon.Id;
+    
+    % Sampling Frequency
+    fs = length(t)/(t(length(t)) - t(1));
+
+    % For Turn off Transient 
     N_fft = length(Vgs_turnoff);
-    fft_Id_turnoff = fft(Id_turnoff, N_fft);
-    fft_Vds_turnoff = fft(Vds_turnoff, N_fft);
-    fft_Vgs_turnoff = fft(Vgs_turnoff, N_fft);
+    fft_Id_turnoff_zm = fft(Id_turnoff, N_fft);
+    fft_Vds_turnoff_zm = fft(Vds_turnoff, N_fft);
+    fft_Vgs_turnoff_zm = fft(Vgs_turnoff, N_fft);
 
     % For Turn on Transient
+
     N_fft = length(Vgs_turnon);
-    fft_Id_turnon = fft(Id_turnon, N_fft);
-    fft_Vds_turnon = fft(Vds_turnon, N_fft);
-    fft_Vgs_turnon = fft(Vgs_turnon, N_fft);
+    fft_Id_turnon_zm = fft(Id_turnon, N_fft);
+    fft_Vds_turnon_zm = fft(Vds_turnon, N_fft);
+    fft_Vgs_turnon_zm = fft(Vgs_turnon, N_fft);
     
-    % Calculate the corresponding frequency vector
+    % Calculate the corresponding grequency vector
 
     N_turnoff = N_fft;
-    f_turnoff = ((0:(N_turnoff-1))*(fs/N_turnoff))';
+    f_turnoff_zm = ((0:(N_turnoff-1))*(fs/N_turnoff))';
     N_turnon = N_fft;
-    f_turnon = ((0:(N_turnon-1))*(fs/N_turnon))';
+    f_turnon_zm = ((0:(N_turnon-1))*(fs/N_turnon))';
     clear t
     clear Vgs_turnoff Vds_turnoff Id_turnoff
     clear Vgs_turnon Vds_turnon Id_turnon
     clear N_turnoff N_turnon N_fft fs
-    
-    fft_turnoff = table();
-    fft_turnoff.f = f_turnoff;
-    fft_turnoff.Vgs = fft_Vgs_turnoff;
-    fft_turnoff.Vds = fft_Vds_turnoff;
-    fft_turnoff.Id = fft_Id_turnoff;
-    
-    fft_turnon = table();
-    fft_turnon.f = f_turnon;
-    fft_turnon.Vgs = fft_Vgs_turnon;
-    fft_turnon.Vds = fft_Vds_turnon;
-    fft_turnon.Id = fft_Id_turnon;
-    
-    fft_trs = table();
-    fft_trs.turnoff = fft_turnoff;
-    fft_trs.turnon = fft_turnon;
 
+    fft_turnoff_zm = table();
+    fft_turnoff_zm.f = f_turnoff_zm;
+    fft_turnoff_zm.Vgs = fft_Vgs_turnoff_zm;
+    fft_turnoff_zm.Vds = fft_Vds_turnoff_zm;
+    fft_turnoff_zm.Id = fft_Id_turnoff_zm;
+    
+    fft_turnon_zm = table();
+    fft_turnon_zm.f = f_turnon_zm;
+    fft_turnon_zm.Vgs = fft_Vgs_turnon_zm;
+    fft_turnon_zm.Vds = fft_Vds_turnon_zm;
+    fft_turnon_zm.Id = fft_Id_turnon_zm;
+    
+    fft_trs_zm = table();
+    fft_trs_zm.turnoff = fft_turnoff_zm;
+    fft_trs_zm.turnon = fft_turnon_zm;
     clear f_turnoff_zm fft_Vgs_turnoff_zm fft_Vds_turnoff_zm fft_Id_turnoff_zm
     clear f_turnon_zm fft_Vgs_turnon_zm fft_Vds_turnon_zm fft_Id_turnon_zm
     clear fft_turnoff_zm fft_turnon_zm
-    
-    % Turn-off Data
-    abs_fft_Id_turnoff = abs(fft_trs_zm.turnoff.Id)';
-    abs_fft_Vds_turnoff = abs(fft_trs_zm.turnoff.Vds)';
-    abs_fft_Vgs_turnoff = abs(fft_trs_zm.turnoff.Vgs)';
-    
-    angle_fft_Id_turnoff = angle(fft_trs_zm.turnoff.Id)';
-    angle_fft_Vds_turnoff = angle(fft_trs_zm.turnoff.Vds)';
-    angle_fft_Vgs_turnoff = angle(fft_trs_zm.turnoff.Vgs)';
-    
-    Result.turnoff = [abs_fft_Id_turnoff; abs_fft_Vds_turnoff; abs_fft_Vgs_turnoff;...
-                     angle_fft_Id_turnoff; angle_fft_Vds_turnoff; angle_fft_Vgs_turnoff];
-    
     
     % Turn-on Data
     abs_fft_Id_turnon = abs(fft_trs_zm.turnon.Id)';
@@ -183,20 +195,35 @@ for i = 3: Data_num
     Result.turnon = [abs_fft_Id_turnon; abs_fft_Vds_turnon; abs_fft_Vgs_turnon;...
                      angle_fft_Id_turnon; angle_fft_Vds_turnon; angle_fft_Vgs_turnon];
 
+
+    % Turn-off Data
+    abs_fft_Id_turnoff = abs(fft_trs_zm.turnoff.Id)';
+    abs_fft_Vds_turnoff = abs(fft_trs_zm.turnoff.Vds)';
+    abs_fft_Vgs_turnoff = abs(fft_trs_zm.turnoff.Vgs)';
+    
+    angle_fft_Id_turnoff = angle(fft_trs_zm.turnoff.Id)';
+    angle_fft_Vds_turnoff = angle(fft_trs_zm.turnoff.Vds)';
+    angle_fft_Vgs_turnoff = angle(fft_trs_zm.turnoff.Vgs)';
+    
+    Result.turnoff = [abs_fft_Id_turnoff; abs_fft_Vds_turnoff; abs_fft_Vgs_turnoff;...
+                     angle_fft_Id_turnoff; angle_fft_Vds_turnoff; angle_fft_Vgs_turnoff];
+    
+
+
     % SAVE CSV file
 
     Vgs_on = 0.1*str2double(name_parts{6});
     Vgs_off = 0.1*str2double(name_parts{8});
 
-    Save_name= [Result_Path,'/Turn_off/','Ron_',num2str(R_on),'_Roff_',num2str(R_off),'_Pulse_',num2str(name_parts{2}),...
+    Save_name= [Result_Path,'Turn_off/','Ron_',num2str(R_on),'_Roff_',num2str(R_off),'_Pulse_',num2str(name_parts{2}),...
         '_Vds_',num2str(name_parts{4}),'_Vgson_',num2str(Vgs_on),'_Vgsoff_',num2str(Vgs_off),...
-        '_Resamplefac_',num2str(resample_factor),'_id_',num2str(i-2),'offFFT.csv'];
+        '_Turnoff_',num2str(0),'_id_',num2str(i-2),'FFT.csv'];
     
     writematrix(Result.turnoff,Save_name)
 
-    Save_name= [Result_Path,'/Turn_on/','Ron_',num2str(R_on),'_Roff_',num2str(R_off),'_Pulse_',num2str(name_parts{2}),...
+    Save_name= [Result_Path,'Turn_on/','Ron_',num2str(R_on),'_Roff_',num2str(R_off),'_Pulse_',num2str(name_parts{2}),...
     '_Vds_',num2str(name_parts{4}),'_Vgson_',num2str(Vgs_on),'_Vgsoff_',num2str(Vgs_off),...
-    '_Resamplefac_',num2str(resample_factor),'_id_',num2str(i-2),'onFFT.csv'];
+    '_Turnon_',num2str(1),'_id_',num2str(i-2),'FFT.csv'];
 
     writematrix(Result.turnon,Save_name)
     
