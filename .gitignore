@@ -2,3 +2,4 @@ Data/*
 *.csv
 *.asv
 .DS_Store
+*/lightning_logs/*
