@@ -1,10 +1,10 @@
 %% Import CSV
 
 % Write HyperParameter
-File_PATH_GAN = '../Data/Gan_Data/FFT/Result.csv';
+File_PATH_GAN = '../Data/Gan_Data/Generator_Data_ver1/Result.csv';
 data_Gan = readtable(File_PATH_GAN);
 
-File_PATH_Original = '../Data/Gan_Data/FFT/Original.csv';
+File_PATH_Original = '../Data/Gan_Data/Generator_Data_ver1/Original.csv';
 data_Original = readtable(File_PATH_Original);
 
 
