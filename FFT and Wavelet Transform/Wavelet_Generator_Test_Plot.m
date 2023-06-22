@@ -87,7 +87,7 @@ clear dataParseTimer
 
 %% Parse the Train and Test Data
 whatTrs = "turnon";
-whatCh = "Vds";
+whatCh = "Vgs";
 L_data = data.(whatTrs);
 numData = length(data.(whatTrs));
 numInputs = length(keys(L_data(1).labels));
@@ -147,151 +147,10 @@ YVal = responses(:, :, :, numTrain+1:end);
 XVal = single(XVal);
 YVal = single(YVal);
 
-%% Generator
-
-dropoutTConv = 0.3;
-dropoutFcl = 0.5;
-dropoutResize = 0.5;
-
-% The definition of the layer graph
-layers1 = [
-    % featureInputLayer(6, 'Normalization', 'none', 'Name', 'input') % assuming your input vector has 6 elements
-    imageInputLayer([1 1 numInputs], 'Normalization','none','Name', 'input')
-
-    % fullyConnectedLayer(512)
-    % batchNormalizationLayer();
-    % leakyReluLayer()
-    % % tanhLayer()
-    % dropoutLayer(dropoutFcl)
-
-    fullyConnectedLayer(30000)
-    batchNormalizationLayer();
-    leakyReluLayer()
-    % tanhLayer()
-    dropoutLayer(dropoutFcl, 'Name', 'dropout fcl')];
-
-layers2_1 = createTConvTall(512, dropoutFcl, dropoutTConv, dropoutResize, "layers2_1");
-layers2_2 = createTConvTall(512, dropoutFcl, dropoutTConv, dropoutResize, "layers2_2");
-layers2_3 = createTConvTall(512, dropoutFcl, dropoutTConv, dropoutResize, "layers2_3");
-layers2_4 = createTConvTall(512, dropoutFcl, dropoutTConv, dropoutResize, "layers2_4");
-layers2_5 = createTConvTall(512, dropoutFcl, dropoutTConv, dropoutResize, "layers2_5");
-layers2_6 = createTConvTall(512, dropoutFcl, dropoutTConv, dropoutResize, "layers2_6");
-
-layersConcatTall = [
-    concatenationLayer(1,6,'Name','concatTall')];
-
-layers3_1 = createTConvFat(512, dropoutFcl, dropoutTConv, dropoutResize, "layers3_1");
-layers3_2 = createTConvFat(512, dropoutFcl, dropoutTConv, dropoutResize, "layers3_2");
-layers3_3 = createTConvFat(512, dropoutFcl, dropoutTConv, dropoutResize, "layers3_3");
-layers3_4 = createTConvFat(512, dropoutFcl, dropoutTConv, dropoutResize, "layers3_4");
-layers3_5 = createTConvFat(512, dropoutFcl, dropoutTConv, dropoutResize, "layers3_5");
-layers3_6 = createTConvFat(512, dropoutFcl, dropoutTConv, dropoutResize, "layers3_6");
-
-layersConcatFat = [
-    concatenationLayer(2,6,'Name','concatFat')];
-
-layersConcatOne = [
-    depthConcatenationLayer(2, "Name", "concatOne")];
-
-layers4_1 = createTConvFinal(dropoutFcl, dropoutTConv, dropoutResize, "layers4_1");
-layers4_2 = createTConvFinal(dropoutFcl, dropoutTConv, dropoutResize, "layers4_2");
-
-layersConcatFinal = [
-    depthConcatenationLayer(2, "Name", "concatFinal")];
-
-layersOut = [
-    regressionLayer('Name','regressionoutput')];
-
-lgraph = layerGraph(layers1);
-lgraph = addLayers(lgraph, layers2_1);
-lgraph = connectLayers(lgraph, 'dropout fcl', 'layers2_1_in');
-lgraph = addLayers(lgraph, layers2_2);
-lgraph = connectLayers(lgraph, 'dropout fcl', 'layers2_2_in');
-lgraph = addLayers(lgraph, layers2_3);
-lgraph = connectLayers(lgraph, 'dropout fcl', 'layers2_3_in');
-lgraph = addLayers(lgraph, layers2_4);
-lgraph = connectLayers(lgraph, 'dropout fcl', 'layers2_4_in');
-lgraph = addLayers(lgraph, layers2_5);
-lgraph = connectLayers(lgraph, 'dropout fcl', 'layers2_5_in');
-lgraph = addLayers(lgraph, layers2_6);
-lgraph = connectLayers(lgraph, 'dropout fcl', 'layers2_6_in');
-lgraph = addLayers(lgraph, layersConcatTall);
-lgraph = connectLayers(lgraph, 'layers2_1_out', 'concatTall/in1');
-lgraph = connectLayers(lgraph, 'layers2_2_out', 'concatTall/in2');
-lgraph = connectLayers(lgraph, 'layers2_3_out', 'concatTall/in3');
-lgraph = connectLayers(lgraph, 'layers2_4_out', 'concatTall/in4');
-lgraph = connectLayers(lgraph, 'layers2_5_out', 'concatTall/in5');
-lgraph = connectLayers(lgraph, 'layers2_6_out', 'concatTall/in6');
-
-lgraph = addLayers(lgraph, layers3_1);
-lgraph = connectLayers(lgraph, 'dropout fcl', 'layers3_1_in');
-lgraph = addLayers(lgraph, layers3_2);
-lgraph = connectLayers(lgraph, 'dropout fcl', 'layers3_2_in');
-lgraph = addLayers(lgraph, layers3_3);
-lgraph = connectLayers(lgraph, 'dropout fcl', 'layers3_3_in');
-lgraph = addLayers(lgraph, layers3_4);
-lgraph = connectLayers(lgraph, 'dropout fcl', 'layers3_4_in');
-lgraph = addLayers(lgraph, layers3_5);
-lgraph = connectLayers(lgraph, 'dropout fcl', 'layers3_5_in');
-lgraph = addLayers(lgraph, layers3_6);
-lgraph = connectLayers(lgraph, 'dropout fcl', 'layers3_6_in');
-lgraph = addLayers(lgraph, layersConcatFat);
-lgraph = connectLayers(lgraph, 'layers3_1_out', 'concatFat/in1');
-lgraph = connectLayers(lgraph, 'layers3_2_out', 'concatFat/in2');
-lgraph = connectLayers(lgraph, 'layers3_3_out', 'concatFat/in3');
-lgraph = connectLayers(lgraph, 'layers3_4_out', 'concatFat/in4');
-lgraph = connectLayers(lgraph, 'layers3_5_out', 'concatFat/in5');
-lgraph = connectLayers(lgraph, 'layers3_6_out', 'concatFat/in6');
-
-lgraph = addLayers(lgraph, layersConcatOne);
-lgraph = connectLayers(lgraph, 'concatTall/out', 'concatOne/in1');
-lgraph = connectLayers(lgraph, 'concatFat/out', 'concatOne/in2');
-
-lgraph = addLayers(lgraph, layers4_1);
-lgraph = connectLayers(lgraph, 'concatOne/out', 'layers4_1_in');
-lgraph = addLayers(lgraph, layers4_2);
-lgraph = connectLayers(lgraph, 'concatOne/out', 'layers4_2_in');
-
-lgraph = addLayers(lgraph, layersConcatFinal);
-lgraph = connectLayers(lgraph, 'layers4_1_out', 'concatFinal/in1');
-lgraph = connectLayers(lgraph, 'layers4_2_out', 'concatFinal/in2');
-
-lgraph = addLayers(lgraph, layersOut);
-lgraph = connectLayers(lgraph, 'concatFinal/out', 'regressionoutput');
-
-
-% plot(lgraph)
-
-% lgraph = layerGraph(layers);
-analyzeNetwork(lgraph)
-%% Training
-% Training options
-maxEpochs = 50000;
-miniBatchSize = 16;
-validationFreq = 22;
-
-options = trainingOptions('sgdm', ...
-    'MaxEpochs',maxEpochs, ...
-    'L2Regularization', 0.0001, ...
-    'GradientThreshold',1, ...
-    'InitialLearnRate',0.01, ...
-    'LearnRateSchedule','piecewise', ...
-    'LearnRateDropPeriod',1000, ...
-    'LearnRateDropFactor',0.1, ...
-    'Verbose',0, ...
-    'Plots','training-progress', ...
-    'Shuffle','every-epoch', ...
-    'MiniBatchSize', miniBatchSize, ...
-    'ExecutionEnvironment', 'gpu', ...
-    'ValidationData', {XVal, YVal}, ...
-    'ValidationFrequency', validationFreq, ...
-    'OutputNetwork', 'last-iteration');
-
-% Train the network
-[net, info] = trainNetwork(XTrain, YTrain, lgraph, options);
 
 %%
-k = randi(size(XVal, 4));
+% k = randi(size(XVal, 4));
+k = 87;
 
 referenceNum = shuffleIdx(numTrain+1);
 referencePath = "../Data/Wavelet_Result_Transient/TimeDomain" + "/" + whatTrs;
@@ -364,7 +223,8 @@ hold off;
 grid on;
 axis("tight")
 legend("Actual", "Predicted", "Location", "best")
-title("Waveform Reconstructed from Predicted Wavelet Image", FontWeight="bold")
+textTitle = sprintf("Reconstructed Waveform from Predicted Wavelet Image:Val Data #%d, %s", k, whatCh);
+title(textTitle, FontWeight="bold")
 xlabel("Time step (of reference waveform)")
 ylabel("Amplitude (normalized)")
 

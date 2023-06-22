@@ -87,7 +87,7 @@ clear dataParseTimer
 
 %% Parse the Train and Test Data
 whatTrs = "turnon";
-whatCh = "Vds";
+whatCh = "Vgs";
 L_data = data.(whatTrs);
 numData = length(data.(whatTrs));
 numInputs = length(keys(L_data(1).labels));
@@ -190,7 +190,7 @@ layers3_6 = createTConvFat(512, dropoutFcl, dropoutTConv, dropoutResize, "layers
 layersConcatFat = [
     concatenationLayer(2,6,'Name','concatFat')];
 
-layersConcatOne = [
+layersConcatOne_1 = [
     depthConcatenationLayer(2, "Name", "concatOne")];
 
 layers4_1 = createTConvFinal(dropoutFcl, dropoutTConv, dropoutResize, "layers4_1");
@@ -298,7 +298,8 @@ referencePath = "../Data/Wavelet_Result_Transient/TimeDomain" + "/" + whatTrs;
 referenceList = dir(referencePath);
 referenceList = referenceList(3:end);
 referenceFileName = (referencePath + "/" + string(referenceList(referenceNum).name));
-referenceData = readtable(referenceFileName); 
+referenceData = readtable(referenceFileName);
+%% 
 
 YPred = predict(net, XVal(1,1,:,k));
 
